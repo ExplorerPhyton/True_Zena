@@ -70,6 +70,7 @@ export async function fetchMedia({ url, audioOnly }) {
 
   const ytDlpPath = process.env.YT_DLP_PATH?.trim() || "yt-dlp";
   const ffmpegPath = process.env.FFMPEG_PATH?.trim() || "ffmpeg";
+  const cookiesPath = process.env.YT_DLP_COOKIES_PATH?.trim();
   const maxDurationSeconds = Number(process.env.MAX_VIDEO_DURATION_SECONDS) || 600;
   const maxFilesizeMb = Number(process.env.MAX_VIDEO_FILESIZE_MB) || 60;
 
@@ -92,6 +93,14 @@ export async function fetchMedia({ url, audioOnly }) {
     "--ffmpeg-location",
     ffmpegPath,
   ];
+
+  // YouTube (and, less often, other platforms) blocks anonymous requests
+  // from datacenter IPs like Render's with "Sign in to confirm you're not
+  // a bot." Passing a cookies.txt from a real logged-in session gets past
+  // that check. Optional: only added when YT_DLP_COOKIES_PATH is set.
+  if (cookiesPath) {
+    args.push("--cookies", cookiesPath);
+  }
 
   if (audioOnly) {
     args.push("-x", "--audio-format", "m4a", "--audio-quality", "5");
