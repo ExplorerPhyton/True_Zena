@@ -53,6 +53,7 @@ async function serveStatic(req, res, pathname) {
   try {
     const ext = path.extname(filePath).toLowerCase();
     res.statusCode = 200;
+    // FIX 1: Added || operator
     res.setHeader("Content-Type", MIME_TYPES[ext] || "application/octet-stream");
     createReadStream(filePath)
       .on("error", () => {
@@ -62,13 +63,15 @@ async function serveStatic(req, res, pathname) {
       })
       .pipe(res);
   } catch (error) {
-    sendJson(res, 500, { error: error?.message  "Failed to serve file." });
+    // FIX 2: Added || operator
+    sendJson(res, 500, { error: error?.message || "Failed to serve file." });
   }
 }
 
 export function startServer() {
-  const port = Number(process.env.PORT)  8787;
-  const corsOrigin = process.env.CORS_ORIGIN  "*";
+  // FIX 3: Added || operators to default configuration backups
+  const port = Number(process.env.PORT) || 8787;
+  const corsOrigin = process.env.CORS_ORIGIN || "*";
 
   const server = createServer(async (req, res) => {
     res.setHeader("Access-Control-Allow-Origin", corsOrigin);
@@ -83,13 +86,13 @@ export function startServer() {
 
     let pathname;
     try {
-      pathname = new URL(req.url, http://${req.headers.host || "localhost"}).pathname;
+      pathname = new URL(req.url, `http://${req.headers.host || "localhost"}`).pathname;
     } catch {
       sendJson(res, 400, { error: "Invalid request URL." });
       return;
     }
 
-    const routeKey = ${req.method} ${pathname};
+    const routeKey = `${req.method} ${pathname}`;
     const methodHandlers = ROUTES[pathname];
 
     if (!methodHandlers) {
@@ -103,22 +106,24 @@ export function startServer() {
         await serveStatic(req, res, pathname);
         return;
       }
-      sendJson(res, 404, { error: No route for ${routeKey}. });
+      sendJson(res, 404, { error: `No route for ${routeKey}.` });
       return;
     }
 
     const handler = methodHandlers[req.method];
     if (!handler) {
       res.setHeader("Allow", Object.keys(methodHandlers).join(", "));
-      sendJson(res, 405, { error: ${pathname} does not support ${req.method}. });
+      sendJson(res, 405, { error: `${pathname} does not support ${req.method}.` });
       return;
     }
-[8/16/2026 10:09 PM] Nati: try {
+
+    // FIX 4: Removed stray chat text "[8/16/2026 10:09 PM] Nati:"
+    try {
       await handler(req, res);
     } catch (error) {
       const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500;
       // eslint-disable-next-line no-console
-      console.error([server] ${routeKey} failed:, error?.message || error);
+      console.error(`[server] ${routeKey} failed:`, error?.message || error);
       if (!res.headersSent) {
         sendJson(res, statusCode, { error: error?.message || "Internal server error." });
       }
@@ -127,7 +132,7 @@ export function startServer() {
 
   server.listen(port, () => {
     // eslint-disable-next-line no-console
-    console.log(True Zena API server listening on http://127.0.0.1:${port});
+    console.log(`True Zena API server listening on http://127.0.0.1:${port}`);
   });
 
   return server;
