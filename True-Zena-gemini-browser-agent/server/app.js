@@ -53,7 +53,7 @@ async function serveStatic(req, res, pathname) {
   try {
     const ext = path.extname(filePath).toLowerCase();
     res.statusCode = 200;
-    res.setHeader("Content-Type", MIME_TYPES[ext]  "application/octet-stream");
+    res.setHeader("Content-Type", MIME_TYPES[ext] || "application/octet-stream");
     createReadStream(filePath)
       .on("error", () => {
         if (!res.headersSent) {
